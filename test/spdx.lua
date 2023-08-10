@@ -76,6 +76,18 @@ function TestSPDX:testUpdateYear()
 	luaunit.assertEquals(licenses, { "GPL-2.0-or-later" })
 end
 
+function TestSPDX:testUpdateYear2()
+	local authors, licenses = spdx.update_spdx_record(
+		{ "2022 Author 1" },
+		{ "GPL-2.0-or-later" },
+		{ "2022 Author 1", "@YYYY@ Author 2" },
+		{ "GPL-2.0-or-later" }
+	)
+
+	luaunit.assertEquals(authors, { "2022 Author 1", "2023 Author 2" })
+	luaunit.assertEquals(licenses, { "GPL-2.0-or-later" })
+end
+
 function TestSPDX:testUpdateSameYear()
 	local authors, licenses = spdx.update_spdx_record(
 		{ "2023 Author 1" },

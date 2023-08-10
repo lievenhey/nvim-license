@@ -46,12 +46,12 @@ local function create_spdx_record(authors, licenses)
 end
 
 local function list_contains(list, item)
-	for _, entry in pairs(list) do
+	for index, entry in pairs(list) do
 		if entry == item then
-			return true
+			return index
 		end
 	end
-	return false
+	return -1
 end
 
 local function update_spdx_record(old_authors, old_licenses, new_authors, new_licenses)
@@ -61,14 +61,23 @@ local function update_spdx_record(old_authors, old_licenses, new_authors, new_li
 	for _, author in pairs(old_authors) do
 		local author_year = string.match(author, "^(%d%d%d%d) ")
 		if author_year ~= nil then
-			if author_year ~= tostring(year()) then
-				author = author:gsub("%d%d%d%d", author_year .. "-" .. tostring(year()))
+			local author_index = list_contains(new_authors, author:gsub("%d%d%d%d", "@YYYY@"))
+			if author_index ~= -1 then
+				if author_year ~= tostring(year()) then
+					author = author:gsub("%d%d%d%d", author_year .. "-" .. tostring(year()))
+					table.remove(new_authors, author_index)
+				end
 			end
 		end
 		local start_year, end_year = string.match(author, "^(%d%d%d%d)-(%d%d%d%d) ")
 		if start_year ~= nil then
 			if end_year ~= tostring(year()) then
-				author = author:gsub("-%d%d%d%d", "-" .. tostring(year()))
+				author = author:gsub("%-%d%d%d%d", "-" .. tostring(year()))
+				local author_pattern = author:gsub("%d%d%d%d%-%d%d%d%d", "@YYYY@")
+				local author_index = list_contains(new_authors, author_pattern)
+				if author_index ~= -1 then
+					table.remove(new_authors, author_index)
+				end
 			end
 		end
 		table.insert(authors, author)
@@ -76,7 +85,12 @@ local function update_spdx_record(old_authors, old_licenses, new_authors, new_li
 
 	for _, author in pairs(new_authors) do
 		if not author:find("@YYYY@") then
-			if not list_contains(authors, author) then
+			if list_contains(authors, author) == -1 then
+				table.insert(authors, author)
+			end
+		else
+			author = author:gsub("@YYYY@", tostring(year()))
+			if list_contains(authors, author) == -1 then
 				table.insert(authors, author)
 			end
 		end
@@ -86,7 +100,7 @@ local function update_spdx_record(old_authors, old_licenses, new_authors, new_li
 	end
 
 	for _, license in pairs(new_licenses) do
-		if not list_contains(licenses, license) then
+		if list_contains(licenses, license) == -1 then
 			table.insert(licenses, license)
 		end
 	end

@@ -51,6 +51,7 @@ local function add_spdx()
 		local last_line = find_end_of_spdx(0)
 		authors, licenses = spdx.extract_existing_record(vim.api.nvim_buf_get_lines(0, 0, last_line, true))
 		vim.api.nvim_buf_set_lines(0, 0, last_line, true, {})
+		print(vim.inspect(authors))
 		authors, licenses = spdx.update_spdx_record(authors, licenses, config.options.authors, config.options.licenses)
 	end
 
@@ -61,7 +62,7 @@ local function add_spdx()
 	if #licenses == 0 then
 		prompt_license()
 	end
-	print(vim.inspect(licenses))
+
 	local text = { comment_begin[vim.bo.filetype] }
 
 	local record = spdx.create_spdx_record(authors, licenses)
@@ -71,6 +72,7 @@ local function add_spdx()
 	end
 
 	table.insert(text, comment_end[vim.bo.filetype])
+	table.insert(text, "")
 
 	vim.api.nvim_buf_set_text(0, 0, 0, 0, 0, text)
 end
